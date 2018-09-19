@@ -16,4 +16,4 @@ var decrypted = Ld(encrypted);
 
 The functions can be used separate. Inlining is a good choise.
 
-Size: 1024 bytes (Lc=578 , Ld=446).
+Size: 1060 bytes (Lc=613 , Ld=446).
