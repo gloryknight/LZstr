@@ -1,6 +1,6 @@
 // http://pieroxy.net/blog/pages/lz-string/testing.html
 //
-// LZ-based compression algorithm, version 2
+// LZ-based compression algorithm, version 1.4.7
 function Lc(uncompressed) {
 	// private property
 	var bitsPerChar=16, 
@@ -101,14 +101,8 @@ function Lc(uncompressed) {
 
 	for (j = 1; j < uncompressed.length; j++) {
 		c = uncompressed.charCodeAt(j);
-		// splitting magic - separate on comma leading to big gain for JSON!
-		if (c===breakCode && forceBreak) {
-			forceBreak=false;
-			nextNode=false;
-		} else {
-			// does the new charCode match an existing prefix?
-			nextNode = node.d[c];
-		}
+		// does the new charCode match an existing prefix?
+		nextNode = node.d[c];
 		if (nextNode) {
 			// continue with next prefix
 			node = nextNode;
@@ -118,13 +112,19 @@ function Lc(uncompressed) {
 			// that needs to be stored at the root?
 			newSymbol();
 
-			// splitting magic
-			if (breakCode!==c && !forceBreak) {
+			// splitting magic - separate on comma leading to big gain for JSON!
+			if (breakCode===c) {
+				if (forceBreak) {
+					forceBreak=false;
+				} else {
+					// add node representing prefix + new charCode to trie
+					node.d[c] = { v: dictSize, d: {} };
+				}
+			} else {
 				forceBreak=true;
+				// add node representing prefix + new charCode to trie
+				node.d[c] = { v: dictSize, d: {} };
 			}
-			// add node representing prefix + new charCode to trie
-			node.d[c] = { v: dictSize, d: {} };
-
 
 			// set node to first charCode of new prefix
 			node = dictionary[c];
@@ -145,7 +145,7 @@ function Lc(uncompressed) {
 
 // http://pieroxy.net/blog/pages/lz-string/testing.html
 //
-// LZ-based compression algorithm, version 1.4.7
+// LZ-based compression algorithm, version 1.4.6
 function Ld(compressed) {
 	var fromCharCode = String.fromCharCode,
 		length=compressed.length,
