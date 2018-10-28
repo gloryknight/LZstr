@@ -1,6 +1,6 @@
 // http://pieroxy.net/blog/pages/lz-string/testing.html
 //
-// LZ-based compression algorithm, version 1.4.7
+// LZ-based compression algorithm, version 2
 function Lc(uncompressed) {
 	// private property
 	var bitsPerChar=16, 
@@ -34,6 +34,21 @@ function Lc(uncompressed) {
 	}
 
 	function newSymbol() {
+		// Prefix+charCode does not exist in trie yet.
+		// We write the prefix to the bitstream, and add
+		// the new charCode to the dictionary if it's new
+		// Then we set `node` to the root node matching
+		// the charCode.
+
+		if (freshNode) {
+			// Prefix is a freshly added character token,
+			// which was already written to the bitstream
+			freshNode = false;
+		} else {
+			// write out the current prefix token
+			StringStream_s(node.v, numBitsMask);
+		}
+
 		// Is the new charCode a new character
 		// that needs to be stored at the root?
 		if (dictionary[c]==undefined) {
@@ -91,29 +106,13 @@ function Lc(uncompressed) {
 			forceBreak=false;
 			nextNode=false;
 		} else {
-		// does the new charCode match an existing prefix?
+			// does the new charCode match an existing prefix?
 			nextNode = node.d[c];
 		}
 		if (nextNode) {
 			// continue with next prefix
 			node = nextNode;
 		} else {
-
-			// Prefix+charCode does not exist in trie yet.
-			// We write the prefix to the bitstream, and add
-			// the new charCode to the dictionary if it's new
-			// Then we set `node` to the root node matching
-			// the charCode.
-
-			if (freshNode) {
-				// Prefix is a freshly added character token,
-				// which was already written to the bitstream
-				freshNode = false;
-			} else {
-				// write out the current prefix token
-				value = node.v;
-				StringStream_s(value, numBitsMask);
-			}
 
 			// Is the new charCode a new character
 			// that needs to be stored at the root?
@@ -132,12 +131,6 @@ function Lc(uncompressed) {
 		}
 	}
 
-	// === Write last prefix to output ===
-	if (!freshNode) {
-		// write out the prefix token
-		StringStream_s(node.v, numBitsMask);
-	}
-
 	// Is c a new character?
 	newSymbol();
 	//}
@@ -150,8 +143,9 @@ function Lc(uncompressed) {
 	return StringStream_d.join('');
 }
 
+// http://pieroxy.net/blog/pages/lz-string/testing.html
 //
-// LZ-based compression algorithm, version 1.4.6
+// LZ-based compression algorithm, version 1.4.7
 function Ld(compressed) {
 	var fromCharCode = String.fromCharCode,
 		length=compressed.length,
@@ -171,7 +165,8 @@ function Ld(compressed) {
 		data_val = getNextValue(0),
 		data_position = resetBits,
 		data_index = 1;
-	
+	// 		breakCode=44;
+
 	// slightly decreases decompression but strongly decreases size
 	var getBits = () => {
 		bits = power = 0;
@@ -202,11 +197,27 @@ function Ld(compressed) {
 		// read out next token
 		maxpower = numBits;
 		getBits();
+		// 		while (power != maxpower) {
+		// 			// shifting has precedence over bitmasking
+		// 			bits += (data_val >> --data_position & 1) << power++;
+		// 			if (data_position == 0) {
+		// 				data_position = resetBits;
+		// 				data_val = getNextValue(data_index++);
+		// 			}
+		// 		}
 
 		// 0 or 1 implies new character token
 		if (bits < 2) {
 			maxpower = (8 + 8 * bits);
 			getBits();
+			// 			while (power != maxpower) {
+			// 				// shifting has precedence over bitmasking
+			// 				bits += (data_val >> --data_position & 1) << power++;
+			// 				if (data_position == 0) {
+			// 					data_position = resetBits;
+			// 					data_val = getNextValue(data_index++);
+			// 				}
+			// 			}
 
 			dictionary[dictSize] = fromCharCode(bits);
 			bits = dictSize++;
@@ -220,8 +231,12 @@ function Ld(compressed) {
 
 		entry = bits < dictionary.length ? dictionary[bits] : c + c.charAt(0);
 		result.push(entry);
-      // Add c+entry[0] to the dictionary.
-      dictionary[dictSize++] = c + entry.charAt(0);
+		// if (breakCode!==c.charCodeAt(0) && breakCode===entry.charCodeAt(entry.length-1)) {
+		// 	enlargeIn++; 
+		// } else {
+		// Add c+entry[0] to the dictionary.
+		dictionary[dictSize++] = c + entry.charAt(0);
+		// }
 
 		c = entry;
 
