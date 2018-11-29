@@ -6,6 +6,7 @@ function Lc(uncompressed) {
 	var bitsPerChar=16, 
 		d256=256,
 		fromCharCode = String.fromCharCode,
+		StringStream_o = [],
 		StringStream_d = [],
 		StringStream_v = 0,
 		StringStream_p = 0,
@@ -14,14 +15,15 @@ function Lc(uncompressed) {
 		dictionary = {},
 		freshNode = true,
 		c = 0,
-		node = { v: 3, d: {} }, // first node will always be initialised like this.
+		node, // first node will always be initialised like this.
 		nextNode,
-		dictSize = 3,
+		dictSize = 2,
 		numBitsMask = 0b100,
 		forceBreak=true,
-		breakCode=44;
+		breakCode=44,
 
-	function StringStream_s(value, numBitsMask) { //streamBits
+	StringStream_s = (value, numBitsMask)=> { //streamBits
+		StringStream_o.push([value, numBitsMask]);
 		for (var i = 0; numBitsMask >>= 1; i++) {
 			// shifting has precedence over bitmasking
 			StringStream_v = value >> i & 1 | StringStream_v << 1;
@@ -31,9 +33,9 @@ function Lc(uncompressed) {
 				StringStream_v = 0;
 			}
 		}
-	}
+	},
 
-	function newSymbol() {
+	newSymbol = () => {
 		// Prefix+charCode does not exist in trie yet.
 		// We write the prefix to the bitstream, and add
 		// the new charCode to the dictionary if it's new
@@ -73,31 +75,15 @@ function Lc(uncompressed) {
 		if (++dictSize >= numBitsMask) {
 			numBitsMask <<= 1;
 		}
-	}
+	};
 
-	//function _compress(uncompressed, bitsPerChar, getCharFromInt) {
-
-	//if (uncompressed.length) {
-	// If there is a string, the first charCode is guaranteed to
-	// be new, so we write it to output stream, and add it to the
-	// dictionary. For the same reason we can initialize freshNode
-	// as true, and new_node, node and dictSize as if
-	// it was already added to the dictionary (see above).
-
+	// The first charCode is guaranteed to be new
 	c = uncompressed.charCodeAt(0);
 
-	// == Write first charCode token to output ==
-
-	// 8 or 16 bit?
-	value = c < d256 ? 0 : 1;
-
-	// insert "new 8/16 bit charCode" token
-	// into bitstream (value 1)
-	StringStream_s(value, numBitsMask);
-	StringStream_s(c, value ? 0b10000000000000000 : d256);
-
-	// Add charCode to the dictionary.
-	dictionary[c] = node;
+	newSymbol();
+	numBitsMask = 4;
+	--dictSize;
+	node = dictionary[c];
 
 	for (j = 1; j < uncompressed.length; j++) {
 		c = uncompressed.charCodeAt(j);
@@ -197,27 +183,11 @@ function Ld(compressed) {
 		// read out next token
 		maxpower = numBits;
 		getBits();
-		// 		while (power != maxpower) {
-		// 			// shifting has precedence over bitmasking
-		// 			bits += (data_val >> --data_position & 1) << power++;
-		// 			if (data_position == 0) {
-		// 				data_position = resetBits;
-		// 				data_val = getNextValue(data_index++);
-		// 			}
-		// 		}
 
 		// 0 or 1 implies new character token
 		if (bits < 2) {
 			maxpower = (8 + 8 * bits);
 			getBits();
-			// 			while (power != maxpower) {
-			// 				// shifting has precedence over bitmasking
-			// 				bits += (data_val >> --data_position & 1) << power++;
-			// 				if (data_position == 0) {
-			// 					data_position = resetBits;
-			// 					data_val = getNextValue(data_index++);
-			// 				}
-			// 			}
 
 			dictionary[dictSize] = fromCharCode(bits);
 			bits = dictSize++;
