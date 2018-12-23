@@ -219,7 +219,7 @@ function Ld(compressed) {
 		data_val = compressed.charCodeAt(0),
 		data_position = resetBits,
 		data_index = 1,
-		breakCode=44;
+		breakSybol=fromCharCode(44);
 
 	// slightly decreases decompression but strongly decreases size
 	var getBits = () => {
@@ -270,8 +270,8 @@ function Ld(compressed) {
 		entry = bits < dictionary.length ? dictionary[bits] : c + c.charAt(0);
 		result.push(entry);
 		// splitting magic - separate on comma leading to big gain for JSON!
-		if (breakCode===entry.charCodeAt(0)) {
-			if (breakCode===c.charCodeAt(0)){
+		if (breakSybol===entry[0]) {
+			if (breakSybol===c[0]){
 				// 		Add c+entry[0] to the dictionary.
 				dictionary[dictSize++] = c + entry.charAt(0);
 			} else {
