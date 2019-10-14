@@ -20,7 +20,6 @@ function Lc(uncompressed) {
 		dictSize = 2,
 		numBitsMask = 0b100,
 		forceBreak=true,
-		breakCode=44,
 
 	StringStream_s = (value, numBitsMask)=> { //streamBits
 		StringStream_o.push([value, numBitsMask]);
@@ -99,18 +98,7 @@ function Lc(uncompressed) {
 			newSymbol();
 
 			// splitting magic - separate on comma leading to big gain for JSON!
-			if (breakCode===c) {
-				if (forceBreak) {
-					forceBreak=false;
-				} else {
-					// add node representing prefix + new charCode to trie
-					node.d[c] = { v: dictSize, d: {} };
-				}
-			} else {
-				forceBreak=true;
-				// add node representing prefix + new charCode to trie
-				node.d[c] = { v: dictSize, d: {} };
-			}
+			node.d[c] = { v: dictSize, d: {} };
 
 			// set node to first charCode of new prefix
 			node = dictionary[c];
