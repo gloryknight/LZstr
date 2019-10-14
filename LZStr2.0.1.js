@@ -1,6 +1,6 @@
 // LZ-based compression algorithm, with header and splitting, v2.0.5
 // based on LZString but with optional header and optional stemming. Use congig (header, breakSymbol)
-var LZStr = (function () {
+var LZString = (function () {
 	// private property
 	var i = 0,
 		d256=256,
@@ -345,7 +345,7 @@ var LZStr = (function () {
 	}
 	
 	return {
-		cToBase64: function (input) {
+		compressToBase64: function (input) {
 			if (input == nulli) return emptyString;
 			var res = _compress(input, 6, getCharFromBase64),
 				i = res.length % 4; // To produce valid Base64
@@ -356,27 +356,27 @@ var LZStr = (function () {
 			return res.join(emptyString);
 		},
 
-		dFromBase64: function (input) {
+		decompressFromBase64: function (input) {
 			if (input == nulli) return emptyString;
 			if (input == emptyString) return nulli;
 			return _decompress(input.length, 6, function (index) { return reverseDict[input.charCodeAt(index)]; });
 		},
 
-		cToUTF16: function (input) {
+		compressToUTF16: function (input) {
 			if (input == nulli) return emptyString;
 			var compressed = _compress(input, 15, getCharFromUTF16);
 			compressed.push(' ');
 			return compressed.join(emptyString);
 		},
 
-		dFromUTF16: function (compressed) {
+		decompressFromUTF16: function (compressed) {
 			if (compressed == nulli) return emptyString;
 			if (compressed == emptyString) return nulli;
 			return _decompress(compressed.length, 15, function (index) { return compressed.charCodeAt(index) - 32; });
 		},
 
 		//compress into uint8array (UCS-2 big endian format)
-		cToUint8Array: function (uncompressed) {
+		compressToUint8Array: function (uncompressed) {
 			var compressed = _compress(uncompressed, 8, function (index) { return index; });
 			var buf = new Uint8Array(compressed.length);
 
@@ -387,7 +387,7 @@ var LZStr = (function () {
 		},
 
 		//decompress from uint8array (UCS-2 big endian format)
-		dFromUint8Array: function (compressed) {
+		decompressFromUint8Array: function (compressed) {
 			if (compressed === nulli || compressed === undefined) {
 				return _decompressFromArray(compressed);
 			} else if (compressed.length == 0) {
@@ -397,13 +397,13 @@ var LZStr = (function () {
 		},
 
 		//compress into a string that is already URI encoded
-		cToURI: function (input) {
+		compressToEncodedURIComponent: function (input) {
 			if (input == nulli) return emptyString;
 			return _compress(input, 6, getCharFromURISafe).join(emptyString);
 		},
 
 		//decompress from an output of compressToEncodedURIComponent
-		dFromURI: function (input) {
+		decompressFromEncodedURIComponent: function (input) {
 			if (input == nulli) return emptyString;
 			if (input == emptyString) return nulli;
 			input = input.replace(/ /g, '+');
@@ -414,15 +414,15 @@ var LZStr = (function () {
 			return _compressToArray(uncompressed).join(emptyString);
 		},
 
-		cToArray: _compressToArray,
-
 		decompress: function (compressed) {
 			if (compressed == nulli) return emptyString;
 			if (compressed == emptyString) return nulli;
 			return _decompress( compressed.length, 16, compressed.charCodeAt.bind(compressed) );
 		},
 
-		dFromArray: _decompressFromArray,
+		compressToArray: _compressToArray,
+
+		decompressFromArray: _decompressFromArray,
 
 		config: _config
 	};
