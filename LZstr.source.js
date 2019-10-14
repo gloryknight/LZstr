@@ -1,7 +1,5 @@
-// http://pieroxy.net/blog/pages/lz-string/testing.html
-//
-// LZ-based compression algorithm, version 1.4.7
-function Lc(uncompressed) {
+Lc=
+function (uncompressed) {
 	// private property
 	var bitsPerChar=16, 
 		d256=256,
@@ -120,7 +118,7 @@ function Lc(uncompressed) {
 // http://pieroxy.net/blog/pages/lz-string/testing.html
 //
 // LZ-based compression algorithm, version 1.4.6
-function Ld(compressed) {
+Ld=function (compressed) {
 	var fromCharCode = String.fromCharCode,
 		length=compressed.length,
 		getNextValue=compressed.charCodeAt.bind(compressed),
