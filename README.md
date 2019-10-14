@@ -2,8 +2,8 @@
 JSON focused compression with minimal size. Binary compatible with lz-string.
 
 ```javascript
-function Lc(r){var o,h,d=String.fromCharCode,n=[],t=[],e=0,a=0,f=0,i=0,u={},c=!0,v=0,C=2,s=4,g=!0,p=(r,o)=>{n.push([r,o]);for(var h=0;o>>=1;h++)e=r>>h&1|e<<1,16==++a&&(a=0,t.push(d(e)),e=0)},A=()=>{c?c=!1:p(o.v,s),void 0==u[v]&&(++C>=s&&(s<<=1),p(i=v<256?0:1,s),p(v,i?65536:256),u[v]={v:C,d:{}},c=!0),++C>=s&&(s<<=1)};for(v=r.charCodeAt(0),A(),s=4,--C,o=u[v],f=1;f<r.length;f++)v=r.charCodeAt(f),(h=o.d[v])?o=h:(A(),44===v?g?g=!1:o.d[v]={v:C,d:{}}:(g=!0,o.d[v]={v:C,d:{}}),o=u[v]);return A(),p(2,s),e<<=16-a,t.push(d(e)),t.join("")}
-function Ld(r){var o,h,d=String.fromCharCode,n=r.length,t=r.charCodeAt.bind(r),e=["","",""],a=4,f=4,i=3,u=[],c=0,v=2,C=0,s=t(0),g=16,p=1,A=()=>{for(c=C=0;C!=v;)c+=(s>>--g&1)<<C++,0==g&&(g=16,s=t(p++))};for(A(),v=8*c+8,A(),h=d(c),e[3]=h,u.push(h);p<=n;){if(v=i,A(),c<2)v=8+8*c,A(),e[f]=d(c),c=f++,0==--a&&(a=1<<i++);else if(2==c)return u.join("");o=c<e.length?e[c]:h+h.charAt(0),u.push(o),e[f++]=h+o.charAt(0),h=o,0==--a&&(a=1<<i++)}}
+Lc=(r=>{var h,o,e=String.fromCharCode,t=[],d=[],n=0,a=0,f=0,u=0,i={},C=!0,c=0,l=2,s=4,v=(r,h)=>{t.push([r,h]);for(var o=0;h>>=1;o++)n=r>>o&1|n<<1,16==++a&&(a=0,d.push(e(n)),n=0)},g=()=>{C?C=!1:v(h.v,s),null==i[c]&&(++l>=s&&(s<<=1),v(u=c<256?0:1,s),v(c,u?65536:256),i[c]={v:l,d:{}},C=!0),++l>=s&&(s<<=1)};for(c=r.charCodeAt(0),g(),s=4,--l,h=i[c],f=1;f<r.length;f++)c=r.charCodeAt(f),(o=h.d[c])?h=o:(g(),h.d[c]={v:l,d:{}},h=i[c]);return g(),v(2,s),n<<=16-a,d.push(e(n)),d.join("")})
+Ld=(r=>{var h,o,e=String.fromCharCode,t=r.length,d=r.charCodeAt.bind(r),n=["","",""],a=4,f=4,u=3,i=[],C=0,c=2,l=0,s=d(0),v=16,g=1,p=()=>{for(C=l=0;l!=c;)C+=(s>>--v&1)<<l++,0==v&&(v=16,s=d(g++))};for(p(),c=8*C+8,p(),o=e(C),n[3]=o,i.push(o);g<=t;){if(c=u,p(),C<2)c=8+8*C,p(),n[f]=e(C),C=f++,0==--a&&(a=1<<u++);else if(2==C)return i.join("");h=C<n.length?n[C]:o+o.charAt(0),i.push(h),n[f++]=o+h.charAt(0),o=h,0==--a&&(a=1<<u++)}})
 ```
 
 Forked from https://github.com/JobLeonard/lz-string
@@ -16,4 +16,4 @@ var original = Ld(compresseed);
 
 The functions can be used separate. Inlining is a good choise.
 
-Size: 965 bytes (Lc=532 , Ld=433).
+Size: 907 bytes (Lc=480 , Ld=427).
