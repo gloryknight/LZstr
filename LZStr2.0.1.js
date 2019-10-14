@@ -1,24 +1,27 @@
-//
-// LZ-based compression algorithm, v2.0.1
-var LZString = (function () {
+// LZ-based compression algorithm, with header and splitting, v2.0.5
+// based on LZString but with optional header and optional stemming. Use congig (header, breakSymbol)
+var LZStr = (function () {
 	// private property
 	var i = 0,
 		d256=256,
 		d65536=65536,
-		breakCode=0,
-		fromCharCode = String.fromCharCode,
-		breakSybol=fromCharCode(breakCode),
+		charCodeAt0=function(a){return a.charCodeAt(0);},
 		emptyString = '',
-		header = ('lz;'+fromCharCode(1)).split(emptyString),
+		breakSymbol=emptyString,
+		breakCode=charCodeAt0(breakSymbol),
+		header = [],
+		fromCharCode = String.fromCharCode,
 		reverseDict = {},
 		base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+',
 		Base64CharArray = (base + '/=').split(emptyString),
-		UriSafeCharArray = (base + '-$').split(emptyString);
+		UriSafeCharArray = (base + '-$').split(emptyString),
+		nulli=null;
+	//_config( "lz0", "");
 	while (i < 65) {
 		if (i > 62) {
-			reverseDict[UriSafeCharArray[i].charCodeAt(0)] = i;
+			reverseDict[charCodeAt0(UriSafeCharArray[i])] = i;
 		}
-		reverseDict[Base64CharArray[i].charCodeAt(0)] = i++;
+		reverseDict[charCodeAt0(Base64CharArray[i])] = i++;
 	}
 
 	function getCharFromBase64(a) { return Base64CharArray[a]; }
@@ -42,7 +45,7 @@ var LZString = (function () {
 			max=(1 << bitsPerChar)-1;
 
 		header.forEach(function(a){
-			StringStream_d.push(a.charCodeAt(0)<(max)?getCharFromInt(a.charCodeAt(0)):getCharFromInt(max));
+			StringStream_d.push(charCodeAt0(a)<(max)?getCharFromInt(charCodeAt0(a)):getCharFromInt(max));
 		});
 
 		function StringStream_s(value, numBitsMask) { //streamBits
@@ -66,7 +69,7 @@ var LZString = (function () {
 		// as true, and new_node, node and dictSize as if
 		// it was already added to the dictionary (see above).
 
-		c = uncompressed.charCodeAt(0);
+		c = charCodeAt0(uncompressed);
 
 		// == Write first charCode token to output ==
 
@@ -253,9 +256,9 @@ var LZString = (function () {
 			max=(1 << resetBits)-1;
 
 		header.forEach(function(a,b){
-			if ((a.charCodeAt(0)<max?a:fromCharCode(max))!==fromCharCode(getNextValue(b))){power=1;}
+			if ((charCodeAt0(a)<max?a:fromCharCode(max))!==fromCharCode(getNextValue(b))){power=1;}
 		});
-		if (power){return null;}
+		if (power){return nulli;}
 		// slightly decreases decompression but strongly decreases size
 		var getBits = function () {
 			bits = power = 0;
@@ -305,8 +308,8 @@ var LZString = (function () {
 			entry = bits < dictionary.length ? dictionary[bits] : c + c.charAt(0);
 			result.push(entry);
 			// splitting magic - separate on comma leading to big gain for JSON!
-			if (breakSybol===entry[0]) {
-				if (breakSybol===c[0]){
+			if (breakSymbol===entry[0]) {
+				if (breakSymbol===c[0]){
 					// 		Add c+entry[0] to the dictionary.
 					dictionary[dictSize++] = c + entry.charAt(0);
 				} else {
@@ -329,14 +332,21 @@ var LZString = (function () {
 		return _compress(uncompressed, 16, fromCharCode);
 	}
 	function _decompressFromArray(compressed) {
-		if (compressed == null) return emptyString;
-		if (compressed.length == 0) return null;
-		return _decompress( compressed.length, 16, function(a){return compressed[a].charCodeAt(0);} );
+		if (compressed == nulli) return emptyString;
+		if (compressed.length == 0) return nulli;
+		return _decompress( compressed.length, 16, function(a){return charCodeAt0(compressed[a]);} );
 	}
 
+	function _config( head, Symbol) {
+		if (head == nulli) return [header.join(emptyString), breakSymbol];
+		header = (head).split(emptyString);
+		breakSymbol=Symbol;
+		breakCode=charCodeAt0(Symbol);
+	}
+	
 	return {
-		compressToBase64: function (input) {
-			if (input == null) return emptyString;
+		cToBase64: function (input) {
+			if (input == nulli) return emptyString;
 			var res = _compress(input, 6, getCharFromBase64),
 				i = res.length % 4; // To produce valid Base64
 			while (i--) {
@@ -346,27 +356,27 @@ var LZString = (function () {
 			return res.join(emptyString);
 		},
 
-		decompressFromBase64: function (input) {
-			if (input == null) return emptyString;
-			if (input == emptyString) return null;
+		dFromBase64: function (input) {
+			if (input == nulli) return emptyString;
+			if (input == emptyString) return nulli;
 			return _decompress(input.length, 6, function (index) { return reverseDict[input.charCodeAt(index)]; });
 		},
 
-		compressToUTF16: function (input) {
-			if (input == null) return emptyString;
+		cToUTF16: function (input) {
+			if (input == nulli) return emptyString;
 			var compressed = _compress(input, 15, getCharFromUTF16);
 			compressed.push(' ');
 			return compressed.join(emptyString);
 		},
 
-		decompressFromUTF16: function (compressed) {
-			if (compressed == null) return emptyString;
-			if (compressed == emptyString) return null;
+		dFromUTF16: function (compressed) {
+			if (compressed == nulli) return emptyString;
+			if (compressed == emptyString) return nulli;
 			return _decompress(compressed.length, 15, function (index) { return compressed.charCodeAt(index) - 32; });
 		},
 
 		//compress into uint8array (UCS-2 big endian format)
-		compressToUint8Array: function (uncompressed) {
+		cToUint8Array: function (uncompressed) {
 			var compressed = _compress(uncompressed, 8, function (index) { return index; });
 			var buf = new Uint8Array(compressed.length);
 
@@ -377,25 +387,25 @@ var LZString = (function () {
 		},
 
 		//decompress from uint8array (UCS-2 big endian format)
-		decompressFromUint8Array: function (compressed) {
-			if (compressed === null || compressed === undefined) {
+		dFromUint8Array: function (compressed) {
+			if (compressed === nulli || compressed === undefined) {
 				return _decompressFromArray(compressed);
 			} else if (compressed.length == 0) {
-				return null;
+				return nulli;
 			}
 			return _decompress(compressed.length, 8, function (index) { return compressed[index]; });
 		},
 
 		//compress into a string that is already URI encoded
-		compressToEncodedURIComponent: function (input) {
-			if (input == null) return emptyString;
+		cToURI: function (input) {
+			if (input == nulli) return emptyString;
 			return _compress(input, 6, getCharFromURISafe).join(emptyString);
 		},
 
 		//decompress from an output of compressToEncodedURIComponent
-		decompressFromEncodedURIComponent: function (input) {
-			if (input == null) return emptyString;
-			if (input == emptyString) return null;
+		dFromURI: function (input) {
+			if (input == nulli) return emptyString;
+			if (input == emptyString) return nulli;
 			input = input.replace(/ /g, '+');
 			return _decompress(input.length, 6, function (index) { return reverseDict[input.charCodeAt(index)]; });
 		},
@@ -404,24 +414,17 @@ var LZString = (function () {
 			return _compressToArray(uncompressed).join(emptyString);
 		},
 
-		compressToArray: _compressToArray,
+		cToArray: _compressToArray,
 
 		decompress: function (compressed) {
-			if (compressed == null) return emptyString;
-			if (compressed == emptyString) return null;
+			if (compressed == nulli) return emptyString;
+			if (compressed == emptyString) return nulli;
 			return _decompress( compressed.length, 16, compressed.charCodeAt.bind(compressed) );
 		},
 
-		decompressFromArray: _decompressFromArray,
+		dFromArray: _decompressFromArray,
 
-		setBreakCode: function (Code) {
-			breakCode=Code;
-			breakSybol=fromCharCode(breakCode);
-		},
-
-		getBreakCode: function () {
-			return breakCode;
-		}
+		config: _config
 	};
 })();
 
