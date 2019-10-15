@@ -12,13 +12,13 @@ var LZString = (function () {
 		header = [],
 		fromCharCode = String.fromCharCode,
 		reverseDict = {},
-		base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+',
-		Base64CharArray = (base + '/=').split(emptyString),
-		UriSafeCharArray = (base + '-$').split(emptyString),
+		base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+		Base64CharArray = (base + '+/=').split(emptyString),
+		UriSafeCharArray = (base + '-.~').split(emptyString),
 		nulli=null;
 	//_config( "lz0", "");
 	while (i < 65) {
-		if (i > 62) {
+		if (i > 61) {
 			reverseDict[charCodeAt0(UriSafeCharArray[i])] = i;
 		}
 		reverseDict[charCodeAt0(Base64CharArray[i])] = i++;
