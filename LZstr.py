@@ -203,4 +203,4 @@ def Ld (compressed):
 			enlargeIn = 1 << numBits
 			numBits+=1
 
-print (Ld(Lc("hi there hi there hi there hi there")))
+#print (Ld(Lc("hi there hi there hi there hi there")))
