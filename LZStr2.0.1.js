@@ -1,4 +1,4 @@
-// LZ-based compression algorithm, with header and splitting, v2.0.6
+// LZ-based compression algorithm, with header and splitting, v2.0.7
 // based on LZString but with optional header and optional stemming. Use congig (header, breakSymbol)
 var LZString = (function () {
 	// private property
@@ -17,7 +17,7 @@ var LZString = (function () {
 		baseExtUri='-.~',
 		Base64CharArray = (base + baseExt64).split(emptyString),
 		UriSafeCharArray = (base + baseExtUri).split(emptyString),
-		B91CharArray = (base + baseExtUri+ baseExt64 + '-.~!#$%&()*,:;<>?@[]^_`{|}').split(emptyString),
+		B91CharArray = (base + baseExtUri+ baseExt64 + '!#$%&()*,:;<>?@[]^_`{|}"').split(emptyString),
 		nulli=null;
 	//_config( "lz0", "");
 	while (i < 92) {
@@ -27,7 +27,7 @@ var LZString = (function () {
 	function getCharFromBase64(a) { return Base64CharArray[a]; }
 	function getCharFromURISafe(a) { return UriSafeCharArray[a]; }
 	function getCharFromUTF16(a) { return fromCharCode(a + 32); }
-	function getCharFromC91(a) { return B91CharArray[Math.floor(a/91)]+B91CharArray[a%91]; }
+	function getCharFromC91(a) { return B91CharArray[Math.floor(a/92)]+B91CharArray[a%92]; }
 	function _compress(uncompressed, bitsPerChar, getCharFromInt) {
 		// private property
 		var StringStream_d = [],
@@ -303,11 +303,6 @@ var LZString = (function () {
 				}
 			} else if (bits == 2) {
 				// end of stream token
-				window.lz={};
-				window.lz.result=result;
-				window.lz.dictSize=dictSize;
-				window.lz.dictionary=dictionary;
-				window.lz.maxpower=maxpower;
 				return result.join(emptyString);
 			}
 
@@ -423,10 +418,10 @@ var LZString = (function () {
 		},
 
 		//decompress from an output of compressToEncodedURIComponent
-		decompressFromB91: function (input) {
-			if (input == nulli) return emptyString;
-			if (input == emptyString) return nulli;
-			return _decompress(input.length, 13, function (index) { return reverseDict[input.charCodeAt(index*2)]*91+reverseDict[input.charCodeAt(index*2+1)]; });
+		decompressFromB91: function (compressed) {
+			if (compressed == nulli) return emptyString;
+			if (compressed == emptyString) return nulli;
+			return _decompress(compressed.length/2, 13, function (index) { return reverseDict[compressed.charCodeAt(index*2)]*92+reverseDict[compressed.charCodeAt(index*2+1)]; });
 		},
 
 		compress: function (uncompressed) {
