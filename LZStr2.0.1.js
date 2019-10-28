@@ -1,4 +1,4 @@
-// LZ-based compression algorithm, with header and splitting, v2.0.5
+// LZ-based compression algorithm, with header and splitting, v2.0.6
 // based on LZString but with optional header and optional stemming. Use congig (header, breakSymbol)
 var LZString = (function () {
 	// private property
@@ -13,20 +13,21 @@ var LZString = (function () {
 		fromCharCode = String.fromCharCode,
 		reverseDict = {},
 		base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-		Base64CharArray = (base + '+/=').split(emptyString),
-		UriSafeCharArray = (base + '-.~').split(emptyString),
+		baseExt64='+/=',
+		baseExtUri='-.~',
+		Base64CharArray = (base + baseExt64).split(emptyString),
+		UriSafeCharArray = (base + baseExtUri).split(emptyString),
+		B91CharArray = (base + baseExtUri+ baseExt64 + '-.~!#$%&()*,:;<>?@[]^_`{|}').split(emptyString),
 		nulli=null;
 	//_config( "lz0", "");
-	while (i < 65) {
-		if (i > 61) {
-			reverseDict[charCodeAt0(UriSafeCharArray[i])] = i;
-		}
-		reverseDict[charCodeAt0(Base64CharArray[i])] = i++;
+	while (i < 92) {
+		reverseDict[charCodeAt0(B91CharArray[i])] = i++;
 	}
 
 	function getCharFromBase64(a) { return Base64CharArray[a]; }
 	function getCharFromURISafe(a) { return UriSafeCharArray[a]; }
 	function getCharFromUTF16(a) { return fromCharCode(a + 32); }
+	function getCharFromC91(a) { return B91CharArray[Math.floor(a/91)]+B91CharArray[a%91]; }
 	function _compress(uncompressed, bitsPerChar, getCharFromInt) {
 		// private property
 		var StringStream_d = [],
@@ -302,6 +303,11 @@ var LZString = (function () {
 				}
 			} else if (bits == 2) {
 				// end of stream token
+				window.lz={};
+				window.lz.result=result;
+				window.lz.dictSize=dictSize;
+				window.lz.dictionary=dictionary;
+				window.lz.maxpower=maxpower;
 				return result.join(emptyString);
 			}
 
@@ -406,8 +412,21 @@ var LZString = (function () {
 		decompressFromEncodedURIComponent: function (input) {
 			if (input == nulli) return emptyString;
 			if (input == emptyString) return nulli;
-			input = input.replace(/ /g, '+');
+			//input = input.replace(/ /g, '+');
 			return _decompress(input.length, 6, function (index) { return reverseDict[input.charCodeAt(index)]; });
+		},
+
+		//compress into a string that is already URI encoded
+		compressToB91: function (input) {
+			if (input == nulli) return emptyString;
+			return _compress(input, 13, getCharFromC91).join(emptyString);
+		},
+
+		//decompress from an output of compressToEncodedURIComponent
+		decompressFromB91: function (input) {
+			if (input == nulli) return emptyString;
+			if (input == emptyString) return nulli;
+			return _decompress(input.length, 13, function (index) { return reverseDict[input.charCodeAt(index*2)]*91+reverseDict[input.charCodeAt(index*2+1)]; });
 		},
 
 		compress: function (uncompressed) {
