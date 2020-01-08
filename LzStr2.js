@@ -324,7 +324,7 @@ var LZString = (()=> {
 		breakCode=charCodeAt0(Symbol);
 	};
 	//_config( "lz0", "");
-	while (i < 92) {
+	while (i < 91) {
 		reverseDict[charCodeAt0(B91CharArray[i])] = i++;
 	}
 
