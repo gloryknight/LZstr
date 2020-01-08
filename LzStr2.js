@@ -17,7 +17,7 @@ var LZString = (()=> {
 		baseExtUri='-.~',
 		Base64CharArray = (base + baseExt64).split(emptyString),
 		UriSafeCharArray = (base + baseExtUri).split(emptyString),
-		B91CharArray = (base + baseExtUri+ baseExt64 + "!#$%&()*,:;<>?@[]^_`{|}'").split(emptyString),
+		B91CharArray = (base + '!#$%&()*+,./:;<=>?@[]^_`{|}~"').split(emptyString),
 		nulli=null,
 		dictSize,
 	join=(array)=> { return array.join(emptyString); },
