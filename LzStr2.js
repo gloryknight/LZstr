@@ -11,22 +11,17 @@ var LZString = (()=> {
 		breakCode=-1,
 		header = [],
 		fromCharCode = String.fromCharCode,
-		reverseDict = {},
 		base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-		baseExt64='+/=',
+		baseExt64='+/',
 		baseExtUri='-.~',
 		Base64CharArray = (base + baseExt64).split(emptyString),
 		UriSafeCharArray = (base + baseExtUri).split(emptyString),
-		B91CharArray = (base + '!#$%&()*+,./:;<=>?@[]^_`{|}~"').split(emptyString),
+		B91CharArray = (base + baseExt64 + baseExtUri + '!#$%&()*,:;<>?@[]^_`{|}=').split(emptyString),
 		nulli=null,
 		dictSize,
 	join=(array)=> { return array.join(emptyString); },
 	charCodeAt0=(string)=> { return string.charCodeAt(0); },
 	charCodeAt=(string,position)=> { return string.charCodeAt(position); },
-	getCharFromBase64=(a)=> { return Base64CharArray[a]; },
-	getCharFromURISafe=(a)=> { return UriSafeCharArray[a]; },
-	getCharFromUTF16=(a)=> { return fromCharCode(a + 32); },
-	getCharFromC91=(a)=> { return B91CharArray[Math.floor(a/92)]+B91CharArray[a%92]; },
 	_compress=(uncompressed, bitsPerChar, getCharFromInt)=> {
 		// private property
 		var StringStream_d = [],
@@ -324,14 +319,11 @@ var LZString = (()=> {
 		breakCode=charCodeAt0(Symbol);
 	};
 	//_config( "lz0", "");
-	while (i < 91) {
-		reverseDict[charCodeAt0(B91CharArray[i])] = i++;
-	}
-
 	
 	return {
 		compressToBase64: (input)=> {
-			var res = _compress(input, 6, getCharFromBase64),
+			var getCharFromBase64=(a)=> { return Base64CharArray[a]; },
+				res = _compress(input, 6, getCharFromBase64),
 				i = res.length % 4; // To produce valid Base64
 			while (i--) {
 				res.push('=');
@@ -341,12 +333,18 @@ var LZString = (()=> {
 		},
 
 		decompressFromBase64: (compressed)=> {
+			var reverseDict={};
+				Base64CharArray.forEach((x, i)=>{
+				// if (reverseDict[charCodeAt0(x)]){new Error(i, x)};
+				reverseDict[charCodeAt0(x)]=i
+			})
 			return _decompress(compressed.length, 6, (index)=> { return reverseDict[charCodeAt(compressed,index)]; });
 		},
 
 		compressToUTF16: (input)=> {
-			var compressed = _compress(input, 15, getCharFromUTF16);
-			compressed.push(' ');
+			var getCharFromUTF16=(a)=> { return fromCharCode(a + 32); },
+				compressed = _compress(input, 15, getCharFromUTF16);
+				compressed.push(' ');
 			return join(compressed);
 		},
 
@@ -377,25 +375,36 @@ var LZString = (()=> {
 
 		//compress into a string that is already URI encoded
 		compressToEncodedURIComponent: (input)=> {
-			if (input == nulli) return emptyString;
+			var getCharFromURISafe=(a)=> { return UriSafeCharArray[a]; };
 			return join(_compress(input, 6, getCharFromURISafe));
 		},
 
 		//decompress from an output of compressToEncodedURIComponent
 		decompressFromEncodedURIComponent: (compressed)=> {
 			//input = input.replace(/ /g, '+');
+			var reverseDict={};
+			UriSafeCharArray.forEach((x, i)=>{
+				// if (reverseDict[charCodeAt0(x)]){new Error(i, x)};
+				reverseDict[charCodeAt0(x)]=i
+			})
 			return _decompress(compressed.length, 6, (index)=> { return reverseDict[charCodeAt(compressed,index)]; });
 		},
 
 		//compress into a string that is already URI encoded
 		compressToB91: (input)=> {
-			if (input == nulli) return emptyString;
+			var getCharFromC91=(a)=> { return B91CharArray[Math.floor(a/91)]+B91CharArray[a%91]; };
+				// 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxuz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~"'
 			return join(_compress(input, 13, getCharFromC91));
 		},
 
 		//decompress from an output of compressToEncodedURIComponent
 		decompressFromB91: (compressed)=> {
-			return _decompress(compressed.length/2, 13, (index)=> { return reverseDict[charCodeAt(compressed,index*2)]*92+reverseDict[charCodeAt(compressed,index*2+1)]; });
+			var reverseDict={};
+			B91CharArray.forEach((x, i)=>{
+				// if (reverseDict[charCodeAt0(x)]){new Error(i, x)};
+				reverseDict[charCodeAt0(x)]=i
+			})
+			return _decompress(compressed.length/2, 13, (index)=> { return reverseDict[charCodeAt(compressed,index*2)]*91+reverseDict[charCodeAt(compressed,index*2+1)]; });
 		},
 
 		compress: (uncompressed)=> {

@@ -2,12 +2,13 @@
 const LzStr2 = require("../LzStr2");
 const assert = require('assert');
 
-function to64(c){
+function to64(c) {
     return Buffer.from(c).toString('base64');
 }
 
-const text = "test test";
-let mini;
+const text = '{"film1":{"text":"some test", "author":"Luke Skywalker", "year":2023}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}, "film2":{"text":"another test", "author":"Joe Black", "year":2022}}'
+
+let mini, text_new;
 
 // for (s of [" ", "t", "e", ""]){
 // LzStr2.config("", s);
@@ -19,31 +20,32 @@ let mini;
 
 // LzStr2.config("lz0", "");
 mini = LzStr2.compressToBase64(text);
-assert (text === LzStr2.decompressFromBase64(mini));
-assert (mini === "C4UwzsAEoUA===");
+assert(mini.length === 544);
+assert(text === LzStr2.decompressFromBase64(mini));
 
 mini = LzStr2.compressToB91(text);
-assert (text === LzStr2.decompressFromB91(mini));
-assert (mini === "EA5,UwA:G}");
+assert(mini.length === 500);
+assert(text === LzStr2.decompressFromB91(mini));
 
 mini = LzStr2.compressToEncodedURIComponent(text);
-assert (text === LzStr2.decompressFromEncodedURIComponent(mini));
-assert (mini === "C4UwzsAEoUA");
+assert(mini.length === 542);
+assert(text === LzStr2.decompressFromEncodedURIComponent(mini));
 
 mini = LzStr2.compressToUint8Array(text);
-assert (text === LzStr2.decompressFromUint8Array(mini));
-assert (to64(mini) === "C4UwzsAEoUA=");
+assert(mini.length === 406);
+assert(text === LzStr2.decompressFromUint8Array(mini));
 
 mini = LzStr2.compressToArray(text);
-assert (text === LzStr2.decompressFromArray(mini));
-assert (to64(mini) === "AAAAAA==");
+assert(mini.length === 203);
+assert(text === LzStr2.decompressFromArray(mini));
 
 mini = LzStr2.compressToUTF16(text);
-assert (text === LzStr2.decompressFromUTF16(mini));
-assert (to64(mini) === "16LksZPloKDkqLQgIA==");
+assert(mini.length === 218);
+assert(text === LzStr2.decompressFromUTF16(mini));
 
 mini = LzStr2.compress(text);
-assert (text === LzStr2.decompress(mini));
-assert (to64(mini) === "4K6F44OO7ICE6oWA");
+assert(mini.length === 203);
+assert(text === LzStr2.decompress(mini));
+// assert (to64(mini) === "...");
 
 
