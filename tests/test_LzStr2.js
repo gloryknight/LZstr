@@ -10,15 +10,15 @@ const text = '{"film1":{"text":"some test", "author":"Luke Skywalker", "year":20
 
 let mini, text_new;
 
-// for (s of [" ", "t", "e", ""]){
-// LzStr2.config("", s);
-// mini = LzStr2.compressToBase64(text);
-// console.log( mini );
-// console.log( mini.length );
-// console.log( LzStr2.dictSize() );
-// }
+assert(3 === LzStr2.compress("").length);
+assert(2 === LzStr2.decompress(LzStr2.compress("")).length);
+assert("1" === LzStr2.decompress(LzStr2.compress("1")));
+assert("1" === LzStr2.decompressFromB91(LzStr2.compressToB91("1")));
+assert("tBBlABAA" === LzStr2.compressToB91(""));
+assert(undefined === LzStr2.decompress(""));
+assert(undefined === LzStr2.decompressFromUint8Array(""));
+assert(undefined === LzStr2.decompressFromB91(""));
 
-// LzStr2.config("lz0", "");
 mini = LzStr2.compressToBase64(text);
 assert(mini.length === 542);
 assert(text === LzStr2.decompressFromBase64(mini));
@@ -50,18 +50,18 @@ assert(text === LzStr2.decompress(mini));
 
 LzStr2.config("lz0", "");
 mini = LzStr2.compress(text);
-assert(mini.slice(0,3) === "lz0");
+assert(mini.slice(0, 3) === "lz0");
 assert(mini.length === 206);
 assert(text === LzStr2.decompress(mini));
 
 mini = LzStr2.compressToBase64(text);
-assert(mini.slice(0,3) === "lz0");
+assert(mini.slice(0, 3) === "lz0");
 assert(mini.length === 545);
 assert(text === LzStr2.decompressFromBase64(mini));
 
 LzStr2.config("lz0", ",");
 mini = LzStr2.compress(text);
-assert(mini.slice(0,3) === "lz0");
+assert(mini.slice(0, 3) === "lz0");
 assert(mini.length === 180);
 assert(text === LzStr2.decompress(mini));
 
@@ -69,3 +69,14 @@ LzStr2.config(null, "");
 mini = LzStr2.compress(text);
 assert(mini.length === 203);
 assert(text === LzStr2.decompress(mini));
+
+// errors
+let pass = false;
+try { mini = LzStr2.decompress(); } catch (e) { pass = true }
+assert(pass);
+try { mini = LzStr2.decompress(NaN); } catch (e) { pass = true }
+assert(pass);
+try { mini = LzStr2.decompress(undefined); } catch (e) { pass = true }
+assert(pass);
+try { mini = LzStr2.decompress(12); } catch (e) { pass = true }
+assert(pass);

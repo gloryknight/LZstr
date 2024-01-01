@@ -8,7 +8,7 @@ var LZString = (() => {
         //charCodeAt0=(a)=>{return a.charCodeAt(0);},
         emptyString = '',
         breakSymbol = emptyString,
-        breakCode = -1,
+        breakCode,
         header,
         fromCharCode = String.fromCharCode,
         base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
@@ -37,7 +37,6 @@ var LZString = (() => {
                 forceBreak = true,
                 node_length = 0,
                 dictionary_length = 0,
-                dictSize = 3,
 
                 node_push = () => {
                     node.push(c);
@@ -99,9 +98,10 @@ var LZString = (() => {
                     if (++dictSize >= numBitsMask) {
                         numBitsMask <<= 1;
                     }
-                };
+                },
+                dictSize = 3;
 
-            if (breakCode > -1) {
+            if (breakCode) {
                 node_push = () => {
                     // splitting magic - separate on comma leading to big gain for JSON!
                     if (breakCode === c) {
@@ -213,14 +213,14 @@ var LZString = (() => {
                 data_index = header ? header.length : 0,
                 data_val = getNextValue(data_index),
                 data_position = resetBits,
-                dictSize = 4,
                 add_entry0 = () => {
                     dictionary[dictSize++] = c + entry.charAt(0);
                 },
                 add_entry0_sub = add_entry0;
+            dictSize = 4;
             data_index++;
 
-            if (breakCode !== -1) {
+            if (breakCode) {
                 add_entry0 = () => {
                     // splitting magic - separate on comma leading to big gain for JSON!
                     if (breakSymbol === entry[0]) {
@@ -337,22 +337,11 @@ var LZString = (() => {
 
         //compress into uint8array (UCS-2 big endian format)
         compressToUint8Array: (uncompressed) => {
-            var compressed = _compress(uncompressed, 8, (index) => { return index; });
-            var buf = new Uint8Array(compressed.length);
-
-            for (var i = 0, TotalLen = compressed.length; i < TotalLen; i++) {
-                buf[i] = compressed[i];
-            }
-            return buf;
+            return Uint8Array.from(_compress(uncompressed, 8, (index) => { return index; }));
         },
 
         //decompress from uint8array (UCS-2 big endian format)
         decompressFromUint8Array: (compressed) => {
-            if (compressed === nulli || compressed === undefined) {
-                return _decompressFromArray(compressed);
-            } else if (compressed.length == 0) {
-                return nulli;
-            }
             return _decompress(compressed.length, 8, (index) => { return compressed[index]; });
         },
 
