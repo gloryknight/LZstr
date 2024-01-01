@@ -1,3 +1,8 @@
+// http://pieroxy.net/blog/pages/lz-string/testing.html
+//
+// LZ-based compression algorithm, version 1.4.6
+// prefer inline minified functions from LZstr.min.js
+// compress string
 Lc = function (uncompressed) {
     // private property
     var bitsPerChar = 16,
@@ -117,6 +122,7 @@ Lc = function (uncompressed) {
 // http://pieroxy.net/blog/pages/lz-string/testing.html
 //
 // LZ-based compression algorithm, version 1.4.6
+// decompress compressed string
 Ld = function (compressed) {
     var fromCharCode = String.fromCharCode,
         length = compressed.length,
