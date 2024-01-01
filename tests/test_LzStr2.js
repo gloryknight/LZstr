@@ -20,7 +20,7 @@ let mini, text_new;
 
 // LzStr2.config("lz0", "");
 mini = LzStr2.compressToBase64(text);
-assert(mini.length === 544);
+assert(mini.length === 542);
 assert(text === LzStr2.decompressFromBase64(mini));
 
 mini = LzStr2.compressToB91(text);
@@ -48,4 +48,24 @@ assert(mini.length === 203);
 assert(text === LzStr2.decompress(mini));
 // assert (to64(mini) === "...");
 
+LzStr2.config("lz0", "");
+mini = LzStr2.compress(text);
+assert(mini.slice(0,3) === "lz0");
+assert(mini.length === 206);
+assert(text === LzStr2.decompress(mini));
 
+mini = LzStr2.compressToBase64(text);
+assert(mini.slice(0,3) === "lz0");
+assert(mini.length === 545);
+assert(text === LzStr2.decompressFromBase64(mini));
+
+LzStr2.config("lz0", ",");
+mini = LzStr2.compress(text);
+assert(mini.slice(0,3) === "lz0");
+assert(mini.length === 180);
+assert(text === LzStr2.decompress(mini));
+
+LzStr2.config(null, "");
+mini = LzStr2.compress(text);
+assert(mini.length === 203);
+assert(text === LzStr2.decompress(mini));

@@ -1,5 +1,5 @@
 // LZ-based compression algorithm, with header and splitting, v2.0.8
-// based on LZString but with optional header and optional stemming. Use congig (header, breakSymbol)
+// based on LZString but with optional header and optional stemming. Use config(header, breakSymbol)
 var LZString = (() => {
     // private property
     var i = 0,
@@ -9,7 +9,7 @@ var LZString = (() => {
         emptyString = '',
         breakSymbol = emptyString,
         breakCode = -1,
-        header = [],
+        header,
         fromCharCode = String.fromCharCode,
         base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         baseExt64 = '+/',
@@ -35,10 +35,15 @@ var LZString = (() => {
                 c = 0,
                 numBitsMask = 0b100,
                 forceBreak = true,
-                max = (1 << bitsPerChar) - 1,
-                split,
                 node_length = 0,
                 dictionary_length = 0,
+                dictSize = 3,
+
+                node_push = () => {
+                    node.push(c);
+                    node.push([dictSize]);
+                },
+                node_push_sub = node_push,
 
                 StringStream_s = (value, numBitsMask) => { //streamBits
                     for (var i = 0; numBitsMask >>= 1; i++) {
@@ -95,14 +100,9 @@ var LZString = (() => {
                         numBitsMask <<= 1;
                     }
                 };
-            dictSize = 3;
-            header.forEach((a) => {
-                StringStream_d.push(charCodeAt0(a) < (max) ? getCharFromInt(charCodeAt0(a)) : getCharFromInt(max));
-            });
 
-
-            if (breakCode !== -1) {
-                split = () => {
+            if (breakCode > -1) {
+                node_push = () => {
                     // splitting magic - separate on comma leading to big gain for JSON!
                     if (breakCode === c) {
                         if (forceBreak) {
@@ -112,21 +112,14 @@ var LZString = (() => {
                             forceBreak = false;
                         } else {
                             // add node representing prefix + new charCode to trie
-                            node.push(c);
-                            node.push([dictSize]);
+                            node_push_sub();
 
                         }
                     } else {
                         forceBreak = true;
                         // add node representing prefix + new charCode to trie
-                        node.push(c);
-                        node.push([dictSize]);
+                        node_push_sub();
                     }
-                };
-            } else {
-                split = () => {
-                    node.push(c);
-                    node.push([dictSize]);
                 };
             }
 
@@ -181,7 +174,7 @@ var LZString = (() => {
 
 
                 newSymbol();
-                split();
+                node_push();
 
                 // set node to first charCode of new prefix
                 //             node = dictionary[c];
@@ -203,6 +196,8 @@ var LZString = (() => {
             // Flush the last char
             StringStream_v <<= StringStream_b - StringStream_p;
             StringStream_d.push(getCharFromInt(StringStream_v));
+            header ? StringStream_d.unshift(header) : 0
+
             return StringStream_d;
         },
         _decompress = (length, resetBits, getNextValue) => {
@@ -215,36 +210,30 @@ var LZString = (() => {
                 maxpower = 2,
                 power = 0,
                 c,
-                data_val = getNextValue(header.length),
+                data_index = header ? header.length : 0,
+                data_val = getNextValue(data_index),
                 data_position = resetBits,
-                data_index = header.length + 1,
-                max = (1 << resetBits) - 1,
-                split;
-            dictSize = 4;
+                dictSize = 4,
+                add_entry0 = () => {
+                    dictionary[dictSize++] = c + entry.charAt(0);
+                },
+                add_entry0_sub = add_entry0;
+            data_index++;
 
             if (breakCode !== -1) {
-                split = () => {
+                add_entry0 = () => {
                     // splitting magic - separate on comma leading to big gain for JSON!
                     if (breakSymbol === entry[0]) {
                         if (breakSymbol === c[0]) {
-                            //         Add c+entry[0] to the dictionary.
-                            dictionary[dictSize++] = c + entry.charAt(0);
+                            add_entry0_sub();
                         } else {
                             enlargeIn++;
                         }
                     } else {
-                        //         Add c+entry[0] to the dictionary.
-                        dictionary[dictSize++] = c + entry.charAt(0);
+                        add_entry0_sub();
                     }
                 };
-            } else {
-                split = () => {
-                    dictionary[dictSize++] = c + entry.charAt(0);
-                };
             }
-            header.forEach((a, b) => {
-                if ((charCodeAt0(a) < max ? a : fromCharCode(max)) !== fromCharCode(getNextValue(b))) { power = 1; }
-            });
             if (power) { return nulli; }
             // slightly decreases decompression but strongly decreases size
             var getBits = () => {
@@ -294,7 +283,7 @@ var LZString = (() => {
 
                 entry = bits < dictionary.length ? dictionary[bits] : c + c.charAt(0);
                 result.push(entry);
-                split();
+                add_entry0();
                 c = entry;
 
                 if (--enlargeIn == 0) {
@@ -313,22 +302,16 @@ var LZString = (() => {
         },
 
         _config = (head, Symbol) => {
-            if (head == nulli) return [join(header), breakSymbol];
-            header = (head).split(emptyString);
+            header = head;
             breakSymbol = Symbol;
             breakCode = charCodeAt0(Symbol);
         };
-    //_config( "lz0", "");
 
     return {
         compressToBase64: (input) => {
+            // no padding is added. Not valid Base64.
             var getCharFromBase64 = (a) => { return Base64CharArray[a]; },
-                res = _compress(input, 6, getCharFromBase64),
-                i = res.length % 4; // To produce valid Base64
-            while (i--) {
-                res.push('=');
-            }
-
+                res = _compress(input, 6, getCharFromBase64);
             return join(res);
         },
 
