@@ -3,7 +3,7 @@
 // LZ-based compression algorithm, version 1.4.6
 // prefer inline minified functions from LZstr.min.js
 // compress string
-Lc = function (uncompressed) {
+Lc = (uncompressed) => {
     // private property
     var bitsPerChar = 16,
         d256 = 256,
@@ -123,7 +123,7 @@ Lc = function (uncompressed) {
 //
 // LZ-based compression algorithm, version 1.4.6
 // decompress compressed string
-Ld = function (compressed) {
+Ld = (compressed) => {
     var fromCharCode = String.fromCharCode,
         length = compressed.length,
         getNextValue = compressed.charCodeAt.bind(compressed),
@@ -207,3 +207,9 @@ Ld = function (compressed) {
 
     }
 }
+
+if (typeof module !== 'undefined' && module != null) {
+    module.exports = { Lc, Ld };
+}
+
+// In a browser environment targeting global scope, Lc and Ld are already global.
