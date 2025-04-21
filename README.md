@@ -9,7 +9,7 @@ LZstr provides efficient string compression with a minimal footprint, making it 
 
 **Key Features:**
 
-* **🚀 Extremely Small:** Less than 1KB minified and gzipped, perfect for size-constrained applications.
+* **🚀 Extremely Small:** 886 bytes minified, perfect for size-constrained applications, microcontrollers, objuscation.
 * **🧩 Simple API:** Just two functions: `Lc` (compress) and `Ld` (decompress).
 * **🔄 `lz-string` Compatible:** (*See Compatibility Note below*) Drop-in replacement for `lz-string`.
 * **📄 "JSON Focused":** Like `lz-string`, it performs well on repetitive text structures commonly found in JSON data.
@@ -27,13 +27,13 @@ In scenarios like browser extensions, embedded widgets, micro-frontends, or opti
 Include it directly into a `script` tag of your HTML (individual parts will also work):
 
 ```javascript
-Lc=r=>{var h,o,e=String.fromCharCode,t=[],d=[],n=0,a=0,f=0,u=0,i={},C=!0,c=0,l=2,s=4,v=(r,h)=>{t.push([r,h]);for(var o=0;h>>=1;o++)n=r>>o&1|n<<1,16==++a&&(a=0,d.push(e(n)),n=0)},g=()=>{C?C=!1:v(h.v,s),null==i[c]&&(++l>=s&&(s<<=1),v(u=c<256?0:1,s),v(c,u?65536:256),i[c]={v:l,d:{}},C=!0),++l>=s&&(s<<=1)};for(c=r.charCodeAt(0),g(),s=4,--l,h=i[c],f=1;f<r.length;f++)c=r.charCodeAt(f),(o=h.d[c])?h=o:(g(),h.d[c]={v:l,d:{}},h=i[c]);return g(),v(2,s),n<<=16-a,d.push(e(n)),d.join("")}
+Lc=r=>{let e,h,t=String.fromCharCode,o=[],d=0,n=0,f=0,l=0,a=0,i={},u=!0,C=0,c=2,g=4,s=(r,e)=>{for(f=0;e>>=1;f++)d=r>>f&1|d<<1,16==++n&&(n=0,o.push(t(d)),d=0)},A=()=>{u?u=!1:s(e.v,g),null==i[C]&&(++c>=g&&(g<<=1),a=C<256?0:1,s(a,g),s(C,a?65536:256),i[C]={v:c,d:{}},u=!0),++c>=g&&(g<<=1)};for(C=r.charCodeAt(0),A(),g=4,--c,e=i[C],l=1;l<r.length;l++)C=r.charCodeAt(l),h=e.d[C],h?e=h:(A(),e.d[C]={v:c,d:{}},e=i[C]);return A(),s(2,g),d<<=16-n,o.push(t(d)),o.join("")}
 ```
 ```javascript
 Ld=r=>{var h,o,e=String.fromCharCode,t=r.length,d=r.charCodeAt.bind(r),n=["","",""],a=4,f=4,u=3,i=[],C=0,c=2,l=0,s=d(0),v=16,g=1,p=()=>{for(C=l=0;l!=c;)C+=(s>>--v&1)<<l++,0==v&&(v=16,s=d(g++))};for(p(),c=8*C+8,p(),o=e(C),n[3]=o,i.push(o);g<=t;){if(c=u,p(),C<2)c=8+8*C,p(),n[f]=e(C),C=f++,0==--a&&(a=1<<u++);else if(2==C)return i.join("");h=C<n.length?n[C]:o+o.charAt(0),i.push(h),n[f++]=o+h.charAt(0),o=h,0==--a&&(a=1<<u++)}}
 ```
 
-Size: 903 bytes (Lc=478 , Ld=425).
+Size: 886 bytes (Lc=461 , Ld=425).
 
 Or as a link to separate script copied from this repository:
 
@@ -82,7 +82,7 @@ The term "JSON focused" is inherited from the original `lz-string` library. LZ-b
 ## Performance
 
 * **Library Size:** LZstr excels here. Its minimal size is its primary advantage.
-* **Compression Ratio & Speed:** Expect moderate compression ratios and speeds. For demanding applications requiring higher ratios or faster processing, consider:
+* **Compression Ratio & Speed:** Expect moderate compression ratios (~3) and speeds (~5 MB/s).
 
 Choose LZstr when the **minimal library size** is the most critical factor for string compression.
 
@@ -101,6 +101,7 @@ Found a bug or have a suggestion? Please open an issue or submit a pull request!
 5.  Open a new Pull Request.
 
 ## Alternatives
+For demanding applications requiring higher compression ratios or faster processing, consider:
 * **Browser Native:** [`Compression Streams API`](https://developer.mozilla.org/en-US/docs/Web/API/Compression_Streams_API) (for gzip/deflate, requires streams/Blobs).
 * **Libraries:** [`pako`](https://github.com/nodeca/pako) (zlib port), or WASM-based libraries for Brotli/Zstandard. These offer better performance but have a larger library footprint.
 
